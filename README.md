@@ -31,6 +31,8 @@ fastapi-architecture/
     ├── config/
     │   ├── __init__.py              # Re-exports `settings`
     │   └── base.py                  # Pydantic Settings class
+    ├── core/
+    │   └── exceptions.py            # Domain exception classes + register_exception_handlers()
     ├── database/
     │   ├── base.py                  # Engine, session, Base, mixins, get_db()
     │   ├── repository.py            # Generic BaseRepository[T]
@@ -112,7 +114,7 @@ Router (app/*/router.py)
     │  extracts request body / path params
     ▼
 Service (app/*/service.py)
-    │  business logic, raises HTTPException on errors
+    │  business logic, raises domain exceptions (NotFoundException, etc.)
     ▼
 Repository (app/*/repository.py)
     │  database queries via SQLAlchemy
@@ -235,13 +237,10 @@ All schemas extend `CustomBaseModel` (`app/utils/schemas.py`), which automatical
 
 ```python
 class CustomBaseModel(BaseModel):
-    class Config:
-        alias_generator = to_camel      # snake_case → camelCase in JSON
-        populate_by_name = True         # also accept original snake_case names
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            Decimal: float,
-        }
+    model_config = ConfigDict(
+        alias_generator=to_camel,   # snake_case → camelCase in JSON
+        populate_by_name=True,      # also accept original snake_case names
+    )
 ```
 
 ### Request Schemas (Input)
@@ -411,6 +410,59 @@ async def get_me(current_user: CurrentUser):
 
 ---
 
+## Exception Handling
+
+Domain exceptions live in `app/core/exceptions.py`. Each exception class carries its own HTTP status code, keeping services completely free of HTTP/FastAPI imports.
+
+### Exception Classes
+
+```python
+class NotFoundException(Exception):
+    def __init__(self, detail: str = "Resource not found"):
+        self.status = 404
+        self.detail = detail
+
+class ConflictException(Exception):
+    def __init__(self, detail: str = "Conflict"):
+        self.status = 409
+        self.detail = detail
+
+class BadRequestException(Exception): ...   # 400
+class UnauthorizedException(Exception): ... # 401
+class ForbiddenException(Exception): ...    # 403
+```
+
+### Registering Handlers
+
+All handlers are wired up via a single function called in `main.py`:
+
+```python
+# app/core/exceptions.py
+def register_exception_handlers(app: FastAPI):
+    @app.exception_handler(NotFoundException)
+    async def not_found_handler(request, exc):
+        return JSONResponse(status_code=exc.status, content={"detail": exc.detail})
+    # ... one handler per exception class
+
+# main.py
+register_exception_handlers(app)
+```
+
+This keeps `main.py` clean and groups all error-handling logic in one place.
+
+### Usage in Services
+
+```python
+# services raise domain exceptions — no FastAPI imports needed
+async def get_by_id(self, user_id: int):
+    user = await self.repo.get_by_id(user_id)
+    if not user:
+        raise NotFoundException("User not found")
+    return user
+```
+
+---
+
 ## API Endpoints
 
 | Method | Path | Auth | Description |
@@ -425,7 +477,18 @@ Interactive docs available at `/docs` (Swagger UI) and `/redoc` when the server 
 
 ## Application Startup
 
-`main.py` uses FastAPI's `lifespan` context manager for startup/shutdown logic:
+`main.py` is intentionally minimal — it wires together routers, lifespan, and exception handlers:
+
+```python
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth_router.router, prefix="/api/v1/auth")
+app.include_router(users_router.router, prefix="/api/v1/users")
+
+register_exception_handlers(app)
+```
+
+The `lifespan` context manager handles startup/shutdown:
 
 ```python
 @asynccontextmanager
