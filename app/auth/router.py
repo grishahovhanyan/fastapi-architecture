@@ -15,7 +15,7 @@ async def register(
 ):
   return await auth_service.register(register_data)
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponseSchema)
 async def login(
   auth_service: Annotated[AuthService, Depends(get_auth_service)],
   login_data: LoginSchema

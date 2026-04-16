@@ -39,12 +39,12 @@ class AuthService:
         detail="User with such username already exists"
       )
     
-    user= await self.user_service.create_user(UserCreate(
+    user = await self.user_service.create_user(UserCreate(
       username=register_data.username,
       email=register_data.email,
       password=hash_password(register_data.password),
     ))
-    
+
     return user
 
   async def login(self, login_data: LoginSchema):

@@ -13,4 +13,3 @@ class User(Base, IDMixin, TimestampMixin):
   username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
   email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
   password: Mapped[str] = mapped_column(String, nullable=False)
-  image_file: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
