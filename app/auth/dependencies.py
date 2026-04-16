@@ -7,15 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.user import User
 from app.database.base import get_db
+from app.users.service import get_user_service, UserService
 from .utils import verify_access_token
 
 
 security = HTTPBearer()
 
-# TODO: user UserService instead of `db: Annotated[AsyncSession, Depends(get_db)]`
-
 async def get_current_user(
-  db: Annotated[AsyncSession, Depends(get_db)],
+  user_service: Annotated[UserService, Depends(get_user_service)],
   credentials =  Depends(security),
 ) -> User:
   token = credentials.credentials
@@ -38,8 +37,7 @@ async def get_current_user(
       headers={"WWW-Authenticate": "Bearer"},
     )
   
-  result = await db.execute(select(User).where(User.id == user_id_int))
-  user = result.scalars().first()
+  user = await user_service.get_by_id(user_id_int)
 
   if not user:
     raise HTTPException(
