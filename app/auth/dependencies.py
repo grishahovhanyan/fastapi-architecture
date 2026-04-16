@@ -2,11 +2,8 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.user import User
-from app.database.base import get_db
 from app.users.service import get_user_service, UserService
 from .utils import verify_access_token
 
