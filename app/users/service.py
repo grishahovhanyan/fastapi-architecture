@@ -1,5 +1,6 @@
 from  __future__ import annotations
 
+from typing import Annotated
 from fastapi import Depends, HTTPException, status
 
 from app.database.models.user import User
@@ -8,7 +9,7 @@ from .repository import get_user_repo, UserRepository
 from .schemas import UserCreate
 
 
-def get_user_service(repo: UserRepository = Depends(get_user_repo)) -> UserService:
+def get_user_service(repo: Annotated[UserRepository, Depends(get_user_repo)]) -> UserService:
   return UserService(repo)
 
 

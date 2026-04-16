@@ -8,8 +8,10 @@ from app.database.base import get_db
 from app.database.repository import BaseRepository
 from app.database.models.user import User
 
+
 async def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
   return UserRepository(db)
+
 
 class UserRepository(BaseRepository[User]):
   def __init__(self, session: AsyncSession):
