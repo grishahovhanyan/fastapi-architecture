@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.database.models import User
-from app.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException
 
 from .repository import get_user_repo, UserRepository
 from .schemas import UserCreate

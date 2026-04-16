@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.config import settings
-from app.exceptions import ConflictException, BadRequestException
+from app.core.exceptions import ConflictException, BadRequestException
 from app.users.service import get_user_service, UserService
 from app.users.schemas import UserCreate
 from .utils import hash_password, verify_password, create_access_token

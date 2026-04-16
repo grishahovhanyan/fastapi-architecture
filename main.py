@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from app.database.base import engine, AsyncSessionLocal
 from app.auth import router as auth_router
 from app.users import router as users_router
-from app.exceptions import register_exception_handlers
+from app.core.exceptions import register_exception_handlers
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
