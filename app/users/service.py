@@ -1,11 +1,12 @@
-from  __future__ import annotations
+from __future__ import annotations
 
 from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 
-from app.database.models.user import User
+from app.database.models import User
+from app.exceptions import NotFoundException
 
-from .repository import get_user_repo, UserRepository 
+from .repository import get_user_repo, UserRepository
 from .schemas import UserCreate
 
 
@@ -21,10 +22,7 @@ class UserService:
     user = await self.repo.get_by_id(user_id)
 
     if not user:
-      raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="User not found"
-      )
+      raise NotFoundException("User not found")
 
     return user
   

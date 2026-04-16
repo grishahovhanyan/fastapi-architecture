@@ -1,4 +1,4 @@
-from  __future__ import annotations
+from __future__ import annotations
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.database.base import get_db
 from app.database.repository import BaseRepository
-from app.database.models.user import User
+from app.database.models import User
 
 
 async def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
